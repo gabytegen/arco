@@ -1,0 +1,25 @@
+# legacy .dc.html URLs -> clean routes
+/ARCO%20Global%20Media.dc.html   /                  301!
+/ARCO%20Case%20Study.dc.html     /case-study        301!
+/ARCO%20Press.dc.html            /press             301!
+/ARCO%20Brand%20Kit.dc.html      /brand-kit         301!
+/ARCO%20FAQ.dc.html              /faq               301!
+/ARCO%20Properties.dc.html       /properties        301!
+/ARCO Global Media.dc.html       /                  301!
+/ARCO Case Study.dc.html         /case-study        301!
+/ARCO Press.dc.html              /press             301!
+/ARCO Brand Kit.dc.html          /brand-kit         301!
+/ARCO FAQ.dc.html                /faq               301!
+/ARCO Properties.dc.html         /properties        301!
+
+# clean URLs
+/press            /press.html         200
+/press/           /press.html         200
+/case-study       /case-study.html    200
+/case-study/      /case-study.html    200
+/brand-kit        /brand-kit.html     200
+/brand-kit/       /brand-kit.html     200
+/faq              /faq.html           200
+/faq/             /faq.html           200
+/properties       /properties.html    200
+/properties/      /properties.html    200
