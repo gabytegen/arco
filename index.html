@@ -42,12 +42,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script>
 (function(){try{
+  if(window.__arcoIntroInit) return;   // this script is injected twice by the runtime
+  window.__arcoIntroInit = 1;
   var d=document.documentElement;
-  if(location.hash&&location.hash.length>1){
+  var seen=false;
+  try{ seen = sessionStorage.getItem('arco-intro') === '1'; }catch(e){}
+  if((location.hash&&location.hash.length>1)||seen){
     d.setAttribute('data-arco-seen','1');
     d.setAttribute('data-arco-deep','1');
     return;
   }
+  try{ sessionStorage.setItem('arco-intro','1'); }catch(e){}
   d.setAttribute('data-arco-loading','1');
   setTimeout(function(){d.removeAttribute('data-arco-loading');},3400);
 }catch(e){}})();
@@ -87,6 +92,8 @@ a:hover{color:var(--blue-lt)}
 #arco-roster .arco-plate-logo{width:56px!important;height:40px!important}
 #arco-roster .arco-plate-logo img{max-height:34px!important;max-width:52px!important}
 @media (max-width:1000px){#arco-roster-wrap{grid-template-columns:1fr!important}#arco-flowmap{min-height:clamp(240px,38vh,340px)!important}}
+#arco-flowmap{min-height:clamp(280px,40vh,430px)}
+@media (min-width:1600px){#arco-roster-wrap{grid-template-columns:minmax(0,.84fr) minmax(0,1.16fr)!important}#arco-flowmap{min-height:clamp(360px,46vh,520px)!important}}
 @media (max-width:620px){#arco-roster{grid-template-columns:1fr!important}#arco-roster .arco-plate{min-height:72px!important}}
 @keyframes arcoMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @keyframes arcoMarqueeSlow{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -502,8 +509,8 @@ body{overflow-x:clip}
       <div class="rv" id="arco-flowmap" style="position:relative;min-height:clamp(280px,40vh,430px);border:1px solid var(--line);background:var(--navy);overflow:hidden">
         <canvas id="arco-flow-c" style="position:absolute;inset:0;display:block;width:100%;height:100%"></canvas>
         <div style="position:absolute;left:16px;bottom:13px;display:flex;flex-wrap:wrap;gap:6px 16px;pointer-events:none">
-          <div style="display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42)"><span style="width:6px;height:6px;border-radius:50%;background:#8fe6ff"></span>Rights in</div>
-          <div style="display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42)"><span style="width:6px;height:6px;border-radius:50%;background:#3a76ff"></span>Demand out</div>
+          <div style="display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42)"><span style="width:6px;height:6px;border-radius:50%;background:#8fe6ff"></span>Rights in · 4 home markets</div>
+          <div style="display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42)"><span style="width:6px;height:6px;border-radius:50%;background:#3a76ff"></span>Demand out · 40 markets</div>
         </div>
         <div id="arco-flow-readout" style="position:absolute;left:16px;right:16px;top:52px;max-width:min(300px,72%);border-left:2px solid #8fe6ff;padding:2px 0 2px 11px;opacity:0;transform:translateY(6px);transition:opacity .3s ease,transform .3s ease;pointer-events:none">
           <div id="arco-flow-k" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(143,230,255,.82)"></div>
@@ -1095,28 +1102,28 @@ class Component extends DCLogic {
     const roN = document.getElementById('arco-flow-n');
     const roS = document.getElementById('arco-flow-s');
     const cards = Array.from(document.querySelectorAll('#arco-roster .arco-plate'));
-    const LAT0 = 80, LAT1 = -58;
     const CLON = -22, CLAT = 16;
     let sc = 1, cw = 0, ch = 0;
     const px = (lon) => cw / 2 + (lon - CLON) * sc;
     const py = (lat) => ch / 2 - (lat - CLAT) * sc;
     const PROPS = {
-      'serie-a': { home: [41.9, 12.5], market: 'Italy', win: [12, 21.5], stats: ['380 matches a season', 'CBS Sports \u00b7 Paramount+'] },
-      'manchester-city': { home: [53.5, -2.24], market: 'England', win: [15, 23.8], stats: ['Six titles in seven seasons', 'NBC \u00b7 Prime Video'] },
-      'city-football-group': { home: [53.5, -2.24], market: 'England', win: [2, 11.5], stats: ['13 clubs, five continents', 'Including New York City FC'] },
-      'major-league-cricket': { home: [19.1, 72.9], market: 'India', win: [0, 8], stats: ['400+ U.S. leagues', '~200,000 players'] },
-      'international-judo-federation': { home: [47.5, 19.05], market: 'Hungary', win: [4, 15], stats: ['200 member nations', 'Grassroots build to LA 2028'] },
-      'ppa-tour': { home: null, market: 'United States', win: [17, 24], stats: ['21 events a year', 'Fox \u00b7 CBS \u00b7 MSG'] },
-      'major-league-pickleball': { home: null, market: 'United States', win: [8, 22], stats: ['14 events a year', 'National broadcast'] },
-      'pickleball-inc': { home: null, market: 'United States', win: [5, 18], stats: ['Parent of the PPA Tour', 'and Major League Pickleball'] },
-      'international-flag-league': { home: null, market: 'United States', win: [9, 23], stats: ['Largest flag football organiser', 'Pro 5v5 launches 2027'] },
-      'the-publisher-desk': { home: null, market: 'United States', win: [3, 16], stats: ['Enthusiast publisher network', 'Sport and culture'] }
+      'serie-a': { home: [41.9, 12.5], market: 'Italy', stats: ['380 matches a season', 'CBS Sports \u00b7 Paramount+'] },
+      'manchester-city': { home: [53.5, -2.24], market: 'England', stats: ['Six titles in seven seasons', 'NBC \u00b7 Prime Video'] },
+      'city-football-group': { home: [53.5, -2.24], market: 'England', stats: ['13 clubs, five continents', 'Including New York City FC'] },
+      'major-league-cricket': { home: [19.1, 72.9], market: 'India', stats: ['400+ U.S. leagues', '~200,000 players'] },
+      'international-judo-federation': { home: [47.5, 19.05], market: 'Hungary', stats: ['200 member nations', 'Grassroots build to LA 2028'] },
+      'ppa-tour': { home: null, market: 'United States', stats: ['21 events a year', 'Fox \u00b7 CBS \u00b7 MSG'] },
+      'major-league-pickleball': { home: null, market: 'United States', stats: ['14 events a year', 'National broadcast'] },
+      'pickleball-inc': { home: null, market: 'United States', stats: ['Parent of the PPA Tour', 'and Major League Pickleball'] },
+      'international-flag-league': { home: null, market: 'United States', stats: ['Largest flag football organiser', 'Pro 5v5 launches 2027'] },
+      'the-publisher-desk': { home: null, market: 'United States', stats: ['Enthusiast publisher network', 'Sport and culture'] }
     };
     const HOMES = [];
-    for (const k in PROPS) if (PROPS[k].home) HOMES.push({ k: k, p: PROPS[k].home, w: PROPS[k].win, m: PROPS[k].market });
+    for (const k in PROPS) if (PROPS[k].home) HOMES.push({ k: k, p: PROPS[k].home, m: PROPS[k].market });
     const OUT = [[51.5,-0.12],[48.86,2.35],[41.9,12.5],[52.52,13.4],[40.42,-3.7],[55.75,37.62],[41.01,28.98],[25.2,55.27],[19.08,72.88],[28.61,77.21],[13.08,80.27],[1.35,103.82],[13.75,100.5],[3.14,101.69],[-6.2,106.85],[14.6,120.98],[22.32,114.17],[31.23,121.47],[39.9,116.4],[37.57,126.98],[35.68,139.69],[-33.87,151.21],[-37.81,144.96],[-36.85,174.76],[-23.55,-46.63],[-34.6,-58.38],[4.71,-74.07],[19.43,-99.13],[-12.05,-77.04],[-33.45,-70.67],[30.04,31.24],[6.52,3.37],[-1.29,36.82],[-26.2,28.05],[33.59,-7.62],[59.33,18.07],[52.37,4.9],[43.65,-79.38],[45.42,-75.7],[-4.44,15.27]];
     const US_PTS = [[40.71,-74.01],[34.05,-118.24],[41.88,-87.63],[29.76,-95.37],[33.75,-84.39],[32.78,-96.8],[39.74,-104.99],[47.61,-122.33],[25.76,-80.19],[42.36,-71.06],[36.16,-86.78],[33.45,-112.07],[39.1,-94.58],[44.98,-93.27],[38.9,-77.04],[35.23,-80.84]];
-    let base = null, baseW = '', sel = null, shift = 0;
+    const US_WT = [100,78,55,45,40,40,34,32,32,28,28,26,24,18,18,14];
+    let base = null, baseW = '', sel = null;
     const buildBase = (w, h) => {
       const c = document.createElement('canvas');
       c.width = Math.round(w * 2); c.height = Math.round(h * 2);
@@ -1152,17 +1159,29 @@ class Component extends DCLogic {
       if (path2(3)) { x.fillStyle = 'rgba(34,74,182,.46)'; x.fill(); }
       return c;
     };
-    const parts = [], pings = [];
-    let nextIn = 0, nextOut = 0;
-    const DAY = 44000;
-    const usPick = (w, h) => { const p = US_PTS[(Math.random() * US_PTS.length) | 0]; return [px(p[1], w), py(p[0])]; };
+    const IN_LANES = {};
+    HOMES.forEach((m, n) => {
+      const set = [];
+      for (let j = 0; j < 4; j++) set.push((j * 3 + n) % US_PTS.length);
+      IN_LANES[m.k] = set.map(i => ({ us: i, wt: US_WT[i] }));
+    });
+    const OUT_W = [1,.86,.8,.76,.74,.72,.78,.72,.94,.92,.7,.74,.72,.62,.78,.7,.76,.96,.9,.8,.94,.78,.7,.56,.9,.76,.66,.86,.62,.6,.8,.8,.62,.68,.6,.62,.68,.76,.6,.58];
+    const HUBS = [0, 1, 2, 4, 8, 5];
+    const OUT_LANES = [];
+    for (let i = 0; i < OUT.length; i++) OUT_LANES.push({ hub: HUBS[i % HUBS.length], dst: i, wt: OUT_W[i] * 100 });
+    const usAt = (i) => [px(US_PTS[i][1]), py(US_PTS[i][0])];
+    const outAt = (i) => [px(OUT[i][1]), py(OUT[i][0])];
+    const IN_LIFT = 0.036, OUT_LIFT = -0.034;
     const curve = (A, B, u, lift) => {
       const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
       const dx = B[0] - A[0], dy = B[1] - A[1];
-      const L = Math.sqrt(dx * dx + dy * dy) || 1;
       const cxp = mx - dy * lift, cyp = my + dx * lift;
       const iu = 1 - u;
       return [iu * iu * A[0] + 2 * iu * u * cxp + u * u * B[0], iu * iu * A[1] + 2 * iu * u * cyp + u * u * B[1]];
+    };
+    const lanePath = (ctx, A, B, lift) => {
+      ctx.beginPath();
+      for (let s = 0; s <= 26; s++) { const q = curve(A, B, s / 26, lift); if (s === 0) ctx.moveTo(q[0], q[1]); else ctx.lineTo(q[0], q[1]); }
     };
     const setSel = (key) => {
       sel = (sel === key) ? null : key;
@@ -1173,10 +1192,6 @@ class Component extends DCLogic {
       }
       if (sel && PROPS[sel]) {
         const p = PROPS[sel];
-        const now = performance.now();
-        const cur = (((now + shift) % DAY) / DAY) * 24;
-        const mid = (p.win[0] + p.win[1]) / 2;
-        shift += ((mid - cur + 24) % 24) / 24 * DAY;
         const card = cards.find(c => c.getAttribute('data-key') === sel);
         if (roK) roK.textContent = p.home ? p.market + ' \u2192 40 markets' : 'United States \u2192 40 markets';
         if (roN) roN.textContent = card ? (card.getAttribute('data-name') || '') : '';
@@ -1193,6 +1208,10 @@ class Component extends DCLogic {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSel(c.getAttribute('data-key')); }
       });
     }
+    const SPEED = 44;          // px per second — flow rate, not projectile speed
+    const SPACING = 132;       // px between particles in a train
+    const CYCLE = 17;          // seconds — how long a lane's duty cycle runs
+    const DUTY = 0.52;         // fraction of that cycle a lane is carrying flow
     const draw = (t) => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = cv.clientWidth, h = cv.clientHeight;
@@ -1206,74 +1225,142 @@ class Component extends DCLogic {
       if (!base || baseW !== w + 'x' + h) { base = buildBase(w, h); baseW = w + 'x' + h; }
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(base, 0, 0, w, h);
-      const hh = (((t + shift) % DAY) / DAY) * 24;
       const selP = sel ? PROPS[sel] : null;
-      const liveHome = HOMES.filter(m => hh >= m.w[0] && hh < m.w[1]);
-
-      const pool = selP ? (selP.home ? [{ k: sel, p: selP.home, w: selP.win, m: selP.market }] : []) : liveHome;
-      const selLive = selP ? (hh >= selP.win[0] && hh < selP.win[1]) : false;
-      const spawnIn = selP ? (selP.home && selLive ? pool : []) : liveHome;
-      if (t >= nextIn && spawnIn.length) {
-        const m = spawnIn[(Math.random() * spawnIn.length) | 0];
-        parts.push({ a: [px(m.p[1], w), py(m.p[0])], b: usPick(w, h), t0: t, dur: 2400 + Math.random() * 900, dir: 1, lift: 0.1 + Math.random() * 0.05, own: !!selP });
-        nextIn = t + (selP ? 150 : 200) + Math.random() * 240;
+      const selHome = selP && selP.home ? sel : null;
+      const selUS = selP && !selP.home;
+      const lanes = [];
+      for (const m of HOMES) {
+        const own = !selP || sel === m.k;
+        const A = [px(m.p[1]), py(m.p[0])];
+        for (const L of IN_LANES[m.k]) lanes.push({ A: A, B: usAt(L.us), lift: IN_LIFT, col: '160,232,255', dir: 1, wt: L.wt, own: own, home: m });
       }
-      if (t >= nextOut && !(selP && !selP.home && !selLive)) {
-        const d = OUT[(Math.random() * OUT.length) | 0];
-        parts.push({ a: usPick(w, h), b: [px(d[1], w), py(d[0])], t0: t, dur: 2600 + Math.random() * 1100, dir: 2, lift: -0.1 - Math.random() * 0.05, own: !!(selP && !selP.home) });
-        nextOut = t + (selP && !selP.home ? 150 : 170) + Math.random() * 230;
+      for (const L of OUT_LANES) lanes.push({ A: usAt(L.hub), B: outAt(L.dst), lift: OUT_LIFT, col: '96,150,255', dir: 2, wt: L.wt, dst: L.dst, own: !selP || selUS });
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      for (const L of lanes) {
+        const damp = L.own ? 1 : 0.28;
+        lanePath(ctx, L.A, L.B, L.lift);
+        ctx.lineWidth = 0.7;
+        ctx.strokeStyle = 'rgba(' + L.col + ',' + ((L.dir === 1 ? 0.13 : (selUS ? 0.16 : 0.105)) * damp).toFixed(3) + ')';
+        ctx.stroke();
       }
-      for (let i = parts.length - 1; i >= 0; i--) {
-        const P = parts[i];
-        const u = (t - P.t0) / P.dur;
-        if (u >= 1) { pings.push({ p: P.b, t0: t, dir: P.dir, own: P.own }); parts.splice(i, 1); continue; }
-        const damp = selP && !P.own ? 0.22 : 1;
-        for (let q = 0; q < 5; q++) {
-          const uu = u - q * 0.022;
-          if (uu <= 0) continue;
-          const pt = curve(P.a, P.b, uu, P.lift);
-          const al = Math.pow(1 - q / 5, 1.7) * 0.95 * damp;
-          ctx.beginPath(); ctx.arc(pt[0], pt[1], q === 0 ? 1.7 : 1.7 - q * 0.28, 0, 6.2832);
-          ctx.fillStyle = P.dir === 1 ? 'rgba(160,232,255,' + (al * 0.9).toFixed(3) + ')' : 'rgba(96,150,255,' + (al * 0.85).toFixed(3) + ')';
-          ctx.fill();
+      // ── continuous two-way flow ────────────────────────────────────────
+      // Every lane carries a train of particles in its primary direction and a
+      // lighter return train the other way. Nothing launches and nothing lands:
+      // particles fade in leaving a city and fade out approaching one, so the
+      // map reads as circulation rather than as objects being fired.
+      const ts = t / 1000;
+      const CYAN = '160,232,255', BLUE = '96,150,255';
+      const BANDS = 4;
+      const bins = {};
+      const addDot = (col, alpha, x, y, r) => {
+        if (alpha < 0.03) return;
+        const b = Math.min(BANDS, Math.max(1, Math.ceil(alpha * BANDS)));
+        const key = col + '|' + b;
+        let p = bins[key];
+        if (!p) { p = bins[key] = { path: new Path2D(), col: col, a: b / BANDS }; }
+        p.path.moveTo(x + r, y);
+        p.path.arc(x, y, r, 0, 6.2832);
+      };
+      for (let li = 0; li < lanes.length; li++) {
+        const L = lanes[li];
+        const damp = L.own ? 1 : 0.26;
+        // staggered duty cycle: only about half the lanes carry flow at once, so
+        // the network breathes instead of firing on every route simultaneously
+        const ph = ((ts / CYCLE) + li * 0.6180339887) % 1;
+        if (ph > DUTY) continue;
+        const ramp = Math.min(1, Math.min(ph, DUTY - ph) / (DUTY * 0.22));
+        const duty = ramp * ramp * (3 - 2 * ramp);
+        const dx = L.B[0] - L.A[0], dy = L.B[1] - L.A[1];
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        const period = Math.max(2.6, len / SPEED);
+        const n = Math.min(6, Math.max(2, Math.round(len / SPACING)));
+        const wt = (L.wt || 60) / 100;
+        const primary = L.dir === 1 ? CYAN : BLUE;   // rights in / demand out
+        const ret = L.dir === 1 ? BLUE : CYAN;       // the exchange runs both ways
+        const rMain = 1.35, rBack = 1.1;
+        const aMain = (0.6 + 0.34 * wt) * damp * duty;
+        const aBack = (0.24 + 0.13 * wt) * damp * duty;
+        for (let k = 0; k < n; k++) {
+          const u = ((ts / period) + k / n) % 1;
+          const env = Math.pow(Math.sin(u * Math.PI), 0.55);
+          const p = curve(L.A, L.B, u, L.lift);
+          addDot(primary, aMain * env, p[0], p[1], rMain);
+        }
+        const nb = Math.max(1, n - 1);
+        for (let k = 0; k < nb; k++) {
+          const u = 1 - (((ts / (period * 1.18)) + (k + 0.5) / nb) % 1);
+          const env = Math.pow(Math.sin(u * Math.PI), 0.55);
+          const p = curve(L.A, L.B, u, L.lift);
+          addDot(ret, aBack * env, p[0], p[1], rBack);
         }
       }
-      for (let i = pings.length - 1; i >= 0; i--) {
-        const G = pings[i];
-        const e = (t - G.t0) / 900;
-        if (e >= 1) { pings.splice(i, 1); continue; }
-        const damp = selP && !G.own ? 0.25 : 1;
-        ctx.beginPath(); ctx.arc(G.p[0], G.p[1], 1.5 + e * 13, 0, 6.2832);
-        ctx.strokeStyle = (G.dir === 1 ? 'rgba(180,238,255,' : 'rgba(120,166,255,') + ((1 - e) * 0.5 * damp).toFixed(3) + ')';
-        ctx.lineWidth = 1; ctx.stroke();
+      ctx.globalCompositeOperation = 'lighter';
+      for (const key in bins) {
+        const p = bins[key];
+        ctx.fillStyle = 'rgba(' + p.col + ',' + p.a.toFixed(3) + ')';
+        ctx.fill(p.path);
       }
-      for (const m of OUT) {
-        const q = [px(m[1], w), py(m[0])];
-        ctx.beginPath(); ctx.arc(q[0], q[1], 1.1, 0, 6.2832);
-        ctx.fillStyle = 'rgba(150,186,232,.3)'; ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      for (let i = 0; i < OUT.length; i++) {
+        const q = [px(OUT[i][1]), py(OUT[i][0])];
+        const wt = OUT_W[i];
+        const rr = 4.5 + wt * 6;
+        const al = ((selP && !selUS) ? 0.045 : 0.085) * wt;
+        const hg = ctx.createRadialGradient(q[0], q[1], 0, q[0], q[1], rr);
+        hg.addColorStop(0, 'rgba(120,166,255,' + al.toFixed(3) + ')');
+        hg.addColorStop(1, 'rgba(120,166,255,0)');
+        ctx.fillStyle = hg;
+        ctx.beginPath(); ctx.arc(q[0], q[1], rr, 0, 6.2832); ctx.fill();
+        ctx.beginPath(); ctx.arc(q[0], q[1], 1 + wt * 0.7, 0, 6.2832);
+        ctx.fillStyle = 'rgba(150,186,232,' + (0.3 + wt * 0.16).toFixed(3) + ')';
+        ctx.fill();
       }
       for (const p of US_PTS) {
-        const q = [px(p[1], w), py(p[0])];
+        const q = [px(p[1]), py(p[0])];
         ctx.beginPath(); ctx.arc(q[0], q[1], 1, 0, 6.2832);
         ctx.fillStyle = 'rgba(186,214,255,.34)'; ctx.fill();
       }
+      const labels = [];
+      const seen = {};
       for (const m of HOMES) {
-        const on = selP ? (sel === m.k) : (hh >= m.w[0] && hh < m.w[1]);
-        const q = [px(m.p[1], w), py(m.p[0])];
-        if (on) {
-          const pu = 0.5 + 0.5 * Math.sin(t / 420);
-          ctx.beginPath(); ctx.arc(q[0], q[1], 3.4 + pu * 2.6, 0, 6.2832);
-          ctx.strokeStyle = 'rgba(160,232,255,' + (0.28 + pu * 0.22).toFixed(3) + ')';
-          ctx.lineWidth = 1; ctx.stroke();
-          ctx.font = "600 9px 'JetBrains Mono',monospace";
-          ctx.textAlign = 'left';
-          ctx.fillStyle = 'rgba(226,250,255,.8)';
-          ctx.fillText(m.m.toUpperCase(), q[0] + 10, q[1] + 3);
-        }
-        ctx.beginPath(); ctx.arc(q[0], q[1], on ? 2.8 : 1.8, 0, 6.2832);
-        ctx.fillStyle = on ? 'rgba(214,246,255,.95)' : 'rgba(143,230,255,.4)';
+        if (seen[m.m]) continue;
+        seen[m.m] = 1;
+        const own = !selP || sel === m.k || (selP && selP.market === m.m);
+        const q = [px(m.p[1]), py(m.p[0])];
+        const hg = ctx.createRadialGradient(q[0], q[1], 0, q[0], q[1], 8);
+        hg.addColorStop(0, 'rgba(160,232,255,' + (own ? 0.26 : 0.09) + ')');
+        hg.addColorStop(1, 'rgba(160,232,255,0)');
+        ctx.fillStyle = hg;
+        ctx.beginPath(); ctx.arc(q[0], q[1], 8, 0, 6.2832); ctx.fill();
+        labels.push({ txt: m.m.toUpperCase(), q: q, a: own ? 0.8 : 0.3 });
+        ctx.beginPath(); ctx.arc(q[0], q[1], own ? 2.8 : 2, 0, 6.2832);
+        ctx.fillStyle = own ? 'rgba(214,246,255,.95)' : 'rgba(143,230,255,.45)';
         ctx.fill();
       }
+      ctx.font = "600 9px 'JetBrains Mono',monospace";
+      const boxes = [];
+      const clash = (bx) => boxes.some(o => !(bx.x2 < o.x1 || bx.x1 > o.x2 || bx.y2 < o.y1 || bx.y1 > o.y2));
+      labels.sort((p, q) => p.q[1] - q.q[1]);
+      const SLOTS = [[10, 3, 'left'], [-10, 3, 'right'], [10, -9, 'left'], [-10, -9, 'right'], [10, 15, 'left'], [-10, 15, 'right']];
+      for (const L of labels) {
+        const tw = ctx.measureText(L.txt).width;
+        let put = null;
+        for (const s of SLOTS) {
+          const tx = L.q[0] + s[0], ty = L.q[1] + s[1];
+          const x1 = s[2] === 'left' ? tx : tx - tw;
+          const box = { x1: x1 - 3, x2: x1 + tw + 3, y1: ty - 9, y2: ty + 3 };
+          if (box.x1 < 3 || box.x2 > w - 3 || box.y1 < 3 || box.y2 > h - 22) continue;
+          if (clash(box)) continue;
+          put = { tx: tx, ty: ty, al: s[2], box: box }; break;
+        }
+        if (!put) continue;
+        boxes.push(put.box);
+        ctx.textAlign = put.al;
+        ctx.fillStyle = 'rgba(226,250,255,' + L.a + ')';
+        ctx.fillText(L.txt, put.tx, put.ty);
+      }
+      ctx.textAlign = 'left';
       const vig = ctx.createRadialGradient(w * 0.5, h * 0.48, Math.min(w, h) * 0.28, w * 0.5, h * 0.5, w * 0.66);
       vig.addColorStop(0, 'rgba(13,23,48,0)');
       vig.addColorStop(1, 'rgba(9,15,34,.5)');
@@ -1490,5 +1577,65 @@ class Component extends DCLogic {
   }
 }
 </script>
+
+<style>
+/* Large screens: cap the hero so the partner-logo strip stays above the fold */
+/* partner-logo strip: shorter band, logos fading at both edges */
+section:has(#arco-marquee){ position: relative; padding: 20px 0 !important; }
+section:has(#arco-marquee)::before,
+section:has(#arco-marquee)::after{
+  content: ''; position: absolute; top: 0; bottom: 0; z-index: 2; pointer-events: none;
+  width: clamp(56px, 9vw, 220px);
+}
+section:has(#arco-marquee)::before{ left: 0;  background: linear-gradient(90deg, var(--ink) 12%, rgba(10,16,36,0)); }
+section:has(#arco-marquee)::after { right: 0; background: linear-gradient(270deg, var(--ink) 12%, rgba(10,16,36,0)); }
+#arco-marquee > div > img:nth-child(1){ height: 55px !important; }
+#arco-marquee > div > img:nth-child(2){ height: 43px !important; }
+#arco-marquee > div > img:nth-child(3){ height: 46px !important; }
+#arco-marquee > div > img:nth-child(4){ height: 57px !important; }
+#arco-marquee > div > img:nth-child(5){ height: 55px !important; }
+#arco-marquee > div > img:nth-child(6){ height: 46px !important; }
+#arco-marquee > div > img:nth-child(7){ height: 34px !important; }
+#arco-marquee > div > img:nth-child(8){ height: 38px !important; }
+#arco-marquee > div > span img{ height: 31px !important; }
+
+
+/* No logo may be visible twice at once: one copy of the set must be at least as wide as
+   the viewport, so the seam never brings a repeat on screen. Gap scales with width, and
+   the loop duration scales with it to keep a constant ~34px/s. */
+@media (min-width: 1200px){
+  #arco-marquee > div{ gap: clamp(110px, 11vw, 390px) !important; padding-right: clamp(110px, 11vw, 390px) !important; }
+  #arco-marquee{ animation-duration: 56s !important; }
+}
+@media (min-width: 1600px){ #arco-marquee{ animation-duration: 74s !important; } }
+@media (min-width: 2200px){ #arco-marquee{ animation-duration: 94s !important; } }
+@media (min-width: 3000px){ #arco-marquee{ animation-duration: 118s !important; } }
+/* logo belt as glass, floating over the bottom of the hero on desktop */
+@media (min-width: 1200px){
+  section:has(#arco-marquee){
+    margin-top: -98px !important;
+    position: relative; z-index: 3;
+    background: linear-gradient(180deg, rgba(10,16,36,0) 0%, rgba(10,16,36,.42) 30%, rgba(10,16,36,.62) 100%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.06);
+    backdrop-filter: blur(10px) saturate(1.06);
+    border-top: 1px solid rgba(255,255,255,.09);
+    border-bottom: 1px solid rgba(255,255,255,.07) !important;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  }
+  section:has(#arco-marquee)::before, section:has(#arco-marquee)::after{ display:none }
+  #arco-marquee img{ opacity:.92 !important }
+}
+@media (min-width: 1200px){
+  /* The hero owns the first screen. Content centres, biased just below the middle.
+     On shorter screens the logo belt arrives on scroll. */
+  #top { min-height: calc(100svh - 67px) !important; align-items: center !important; }
+  #arco-hero-inner { padding-top: clamp(56px, 10svh, 130px) !important; padding-bottom: clamp(28px, 4svh, 56px) !important; }
+}
+/* Tall desktop screens have room for hero AND belt: reserve the strip so it lands on
+   the first screen. Shorter screens keep the hero to themselves. */
+
+
+</style>
 </body>
 </html>
