@@ -510,7 +510,7 @@ body{overflow-x:clip}
         <canvas id="arco-flow-c" style="position:absolute;inset:0;display:block;width:100%;height:100%"></canvas>
         <div style="position:absolute;left:16px;bottom:13px;display:flex;flex-wrap:wrap;gap:6px 16px;pointer-events:none">
           <div style="display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42)"><span style="width:6px;height:6px;border-radius:50%;background:#8fe6ff"></span>Rights in · 4 home markets</div>
-          <div style="display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42)"><span style="width:6px;height:6px;border-radius:50%;background:#3a76ff"></span>Demand out · 40 markets</div>
+          <div style="display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.42)"><span style="width:6px;height:6px;border-radius:50%;background:#3a76ff"></span>Demand out · U.S. brands</div>
         </div>
         <div id="arco-flow-readout" style="position:absolute;left:16px;right:16px;top:52px;max-width:min(300px,72%);border-left:2px solid #8fe6ff;padding:2px 0 2px 11px;opacity:0;transform:translateY(6px);transition:opacity .3s ease,transform .3s ease;pointer-events:none">
           <div id="arco-flow-k" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(143,230,255,.82)"></div>
@@ -1162,13 +1162,13 @@ class Component extends DCLogic {
     const IN_LANES = {};
     HOMES.forEach((m, n) => {
       const set = [];
-      for (let j = 0; j < 4; j++) set.push((j * 3 + n) % US_PTS.length);
+      for (let j = 0; j < 3; j++) set.push((j * 5 + n * 2) % US_PTS.length);
       IN_LANES[m.k] = set.map(i => ({ us: i, wt: US_WT[i] }));
     });
     const OUT_W = [1,.86,.8,.76,.74,.72,.78,.72,.94,.92,.7,.74,.72,.62,.78,.7,.76,.96,.9,.8,.94,.78,.7,.56,.9,.76,.66,.86,.62,.6,.8,.8,.62,.68,.6,.62,.68,.76,.6,.58];
     const HUBS = [0, 1, 2, 4, 8, 5];
-    const OUT_LANES = [];
-    for (let i = 0; i < OUT.length; i++) OUT_LANES.push({ hub: HUBS[i % HUBS.length], dst: i, wt: OUT_W[i] * 100 });
+    // Routes exist only between the U.S. and the markets ARCO actually represents.
+
     const usAt = (i) => [px(US_PTS[i][1]), py(US_PTS[i][0])];
     const outAt = (i) => [px(OUT[i][1]), py(OUT[i][0])];
     const IN_LIFT = 0.036, OUT_LIFT = -0.034;
@@ -1193,7 +1193,7 @@ class Component extends DCLogic {
       if (sel && PROPS[sel]) {
         const p = PROPS[sel];
         const card = cards.find(c => c.getAttribute('data-key') === sel);
-        if (roK) roK.textContent = p.home ? p.market + ' \u2192 40 markets' : 'United States \u2192 40 markets';
+        if (roK) roK.textContent = p.home ? p.market + ' \u2192 U.S. market' : 'United States \u2192 U.S. brands';
         if (roN) roN.textContent = card ? (card.getAttribute('data-name') || '') : '';
         if (roS) roS.textContent = p.stats.join(' \u00b7 ');
         if (readout) { readout.style.opacity = '1'; readout.style.transform = 'none'; }
@@ -1234,14 +1234,22 @@ class Component extends DCLogic {
         const A = [px(m.p[1]), py(m.p[0])];
         for (const L of IN_LANES[m.k]) lanes.push({ A: A, B: usAt(L.us), lift: IN_LIFT, col: '160,232,255', dir: 1, wt: L.wt, own: own, home: m });
       }
-      for (const L of OUT_LANES) lanes.push({ A: usAt(L.hub), B: outAt(L.dst), lift: OUT_LIFT, col: '96,150,255', dir: 2, wt: L.wt, dst: L.dst, own: !selP || selUS });
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      for (const L of lanes) {
+      const tsL = t / 1000;
+      for (let li = 0; li < lanes.length; li++) {
+        const L = lanes[li];
+        const ph = ((tsL / CYCLE) + li * 0.6180339887) % 1;
+        L.duty = 0;
+        if (ph <= DUTY) {
+          const ramp = Math.min(1, Math.min(ph, DUTY - ph) / (DUTY * 0.22));
+          L.duty = ramp * ramp * (3 - 2 * ramp);
+        }
+        if (L.duty <= 0.01) continue;
         const damp = L.own ? 1 : 0.28;
         lanePath(ctx, L.A, L.B, L.lift);
         ctx.lineWidth = 0.7;
-        ctx.strokeStyle = 'rgba(' + L.col + ',' + ((L.dir === 1 ? 0.13 : (selUS ? 0.16 : 0.105)) * damp).toFixed(3) + ')';
+        ctx.strokeStyle = 'rgba(' + L.col + ',' + ((L.dir === 1 ? 0.15 : (selUS ? 0.18 : 0.12)) * damp * L.duty).toFixed(3) + ')';
         ctx.stroke();
       }
       // ── continuous two-way flow ────────────────────────────────────────
@@ -1265,12 +1273,8 @@ class Component extends DCLogic {
       for (let li = 0; li < lanes.length; li++) {
         const L = lanes[li];
         const damp = L.own ? 1 : 0.26;
-        // staggered duty cycle: only about half the lanes carry flow at once, so
-        // the network breathes instead of firing on every route simultaneously
-        const ph = ((ts / CYCLE) + li * 0.6180339887) % 1;
-        if (ph > DUTY) continue;
-        const ramp = Math.min(1, Math.min(ph, DUTY - ph) / (DUTY * 0.22));
-        const duty = ramp * ramp * (3 - 2 * ramp);
+        const duty = L.duty || 0;
+        if (duty <= 0.01) continue;
         const dx = L.B[0] - L.A[0], dy = L.B[1] - L.A[1];
         const len = Math.sqrt(dx * dx + dy * dy) || 1;
         const period = Math.max(2.6, len / SPEED);
@@ -1302,24 +1306,17 @@ class Component extends DCLogic {
         ctx.fill(p.path);
       }
       ctx.globalCompositeOperation = 'source-over';
-      for (let i = 0; i < OUT.length; i++) {
-        const q = [px(OUT[i][1]), py(OUT[i][0])];
-        const wt = OUT_W[i];
-        const rr = 4.5 + wt * 6;
-        const al = ((selP && !selUS) ? 0.045 : 0.085) * wt;
+      for (let i = 0; i < US_PTS.length; i++) {
+        const p = US_PTS[i], q = [px(p[1]), py(p[0])];
+        const wt = US_WT[i] / 100;
+        const hot = selUS ? 1 : 0;
+        const rr = 3 + wt * 5;
         const hg = ctx.createRadialGradient(q[0], q[1], 0, q[0], q[1], rr);
-        hg.addColorStop(0, 'rgba(120,166,255,' + al.toFixed(3) + ')');
-        hg.addColorStop(1, 'rgba(120,166,255,0)');
-        ctx.fillStyle = hg;
-        ctx.beginPath(); ctx.arc(q[0], q[1], rr, 0, 6.2832); ctx.fill();
-        ctx.beginPath(); ctx.arc(q[0], q[1], 1 + wt * 0.7, 0, 6.2832);
-        ctx.fillStyle = 'rgba(150,186,232,' + (0.3 + wt * 0.16).toFixed(3) + ')';
-        ctx.fill();
-      }
-      for (const p of US_PTS) {
-        const q = [px(p[1]), py(p[0])];
-        ctx.beginPath(); ctx.arc(q[0], q[1], 1, 0, 6.2832);
-        ctx.fillStyle = 'rgba(186,214,255,.34)'; ctx.fill();
+        hg.addColorStop(0, 'rgba(150,186,255,' + (0.05 + wt * 0.06 + hot * 0.12).toFixed(3) + ')');
+        hg.addColorStop(1, 'rgba(150,186,255,0)');
+        ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(q[0], q[1], rr, 0, 6.2832); ctx.fill();
+        ctx.beginPath(); ctx.arc(q[0], q[1], 1 + wt * 0.6, 0, 6.2832);
+        ctx.fillStyle = 'rgba(186,214,255,' + (0.3 + wt * 0.2 + hot * 0.25).toFixed(3) + ')'; ctx.fill();
       }
       const labels = [];
       const seen = {};
