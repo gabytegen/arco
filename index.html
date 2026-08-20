@@ -6,6 +6,15 @@
 <link rel="icon" href="/brand/favicon.png" type="image/png" sizes="512x512">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+<script>
+/* Self-hosted runtime. The DC loader reads window.__resources and takes the
+   local copy instead of the CDN, so the page still renders if unpkg is down. */
+window.__resources={
+"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"/vendor/react-18.3.1.production.min.js",
+"https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"/vendor/react-dom-18.3.1.production.min.js",
+"https://unpkg.com/@babel/standalone@7.29.0/babel.min.js":"/vendor/babel-standalone-7.29.0.min.js"
+};
+</script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -637,7 +646,9 @@ body{overflow-x:clip}
         <p class="rv" style="margin:0;font-size:19px;line-height:1.6;color:rgba(255,255,255,.72);max-width:540px">Toys&#8220;R&#8221;Us named Title Sponsor of the PPA Finals — broadcast, on-court activation, social and venue takeover in one owned moment.</p>
       </div>
       <a class="rv" href="/case-study" aria-label="Read the Toys“R”Us × PPA Finals case study" style="display:block;position:relative;overflow:hidden;border:1px solid var(--line);border-right:none;cursor:pointer" style-hover="border-color:rgba(143,230,255,.55)">
-        <img src="img/ppa-finals.jpg" alt="Toys&#8220;R&#8221;Us at the PPA Finals" style="width:100%;display:block;transition:transform 1.1s cubic-bezier(.2,.7,.3,1),filter .6s ease" style-hover="transform:scale(1.05)" />
+        <div style="position:relative;width:100%;aspect-ratio:830/660;overflow:hidden;background:var(--ink)">
+          <video class="arco-loop" src="video/ppa-finals-loop.mp4" poster="img/ppa-finals-poster.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Toys&#8220;R&#8221;Us at the PPA Finals" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;transition:transform 1.1s cubic-bezier(.2,.7,.3,1),filter .6s ease" style-hover="transform:scale(1.05)"></video>
+        </div>
         <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(to top, rgba(10,16,36,.86) 0%, rgba(10,16,36,.28) 46%, transparent 72%);opacity:0;transition:opacity .5s ease" style-hover="opacity:1"></div>
         <div aria-hidden="true" style="position:absolute;top:0;left:0;width:34%;height:100%;background:linear-gradient(90deg, transparent, rgba(255,255,255,.16), transparent);pointer-events:none;opacity:0;transition:opacity .2s ease" style-hover="opacity:1;animation:arcoSheen 1.15s cubic-bezier(.5,0,.4,1)"></div>
         <div style="position:absolute;left:0;right:0;bottom:0;padding:26px 28px;display:flex;flex-direction:column;gap:8px;transform:translateY(14px);opacity:0;transition:transform .55s cubic-bezier(.2,.7,.3,1),opacity .45s ease" style-hover="transform:none;opacity:1">
@@ -1634,5 +1645,39 @@ section:has(#arco-marquee)::after { right: 0; background: linear-gradient(270deg
 
 
 </style>
+<script>
+/* Looping video tiles.
+   The page renders after this script parses, and the renderer drops the
+   `muted` and `loop` attributes, so both are set here as properties —
+   without `muted` no browser will autoplay. Reduced-motion holds the
+   poster frame instead. Properties only: no DOM writes, no observer loop. */
+(function(){
+  try{
+    var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var started=new WeakSet(),queued=false;
+    function fix(){
+      queued=false;
+      var list=document.querySelectorAll('video.arco-loop');
+      for(var i=0;i<list.length;i++){
+        var v=list[i];
+        if(!v.muted){v.muted=true;v.defaultMuted=true;}
+        if(!v.loop)v.loop=true;
+        if(!v.playsInline)v.playsInline=true;
+        if(reduce){if(!v.paused)v.pause();continue;}
+        if(v.paused&&!started.has(v)){
+          started.add(v);
+          var p=v.play();
+          if(p&&p.catch)p.catch(function(){});
+        }
+      }
+    }
+    function schedule(){if(!queued){queued=true;requestAnimationFrame(fix);}}
+    fix();
+    document.addEventListener('DOMContentLoaded',fix);
+    window.addEventListener('load',fix);
+    new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>

@@ -6,6 +6,15 @@
 <link rel="icon" href="/brand/favicon.png" type="image/png" sizes="512x512">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+<script>
+/* Self-hosted runtime. The DC loader reads window.__resources and takes the
+   local copy instead of the CDN, so the page still renders if unpkg is down. */
+window.__resources={
+"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"/vendor/react-18.3.1.production.min.js",
+"https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"/vendor/react-dom-18.3.1.production.min.js",
+"https://unpkg.com/@babel/standalone@7.29.0/babel.min.js":"/vendor/babel-standalone-7.29.0.min.js"
+};
+</script>
 <script src="./support.js"></script>
 </head>
 <body>

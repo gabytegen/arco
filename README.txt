@@ -47,6 +47,8 @@ FILES
   press.html             market coverage
   brand-kit.html         logos, colour, type, boilerplate
   support.js             page runtime (required)
+  vendor/                React, React-DOM and Babel (required)
+  video/                 the PPA Finals film and the loop
   brand/                 logo, favicon, social card
   brandkit/              downloadable brand kit
   img/                   photography and portraits
@@ -56,8 +58,44 @@ FILES
   _redirects             clean URLs (/press, /case-study)
   netlify.toml           caching and security headers
 
+The folder is about 45 MB. The film is most of that.
+
+THE VIDEO
+
+  video/arco-ppa-reel.mp4      the full film, 2:33
+  video/ppa-finals-loop.mp4    the 5s loop on the home page
+  img/ppa-film-poster.jpg      the still behind the play button
+  img/ppa-finals-poster.jpg    the still behind the loop
+
+The film does not download until a visitor clicks play.
+To change the film, replace the file and keep the name.
+To change a poster, replace the .jpg and keep the name.
+
+THE vendor/ FOLDER — DO NOT DELETE
+
+The pages load React and Babel from vendor/, not from the
+internet. A short script in the <head> of every page maps the
+old unpkg.com addresses to these local files:
+
+  window.__resources = { ... }
+
+Without vendor/, every page renders blank when unpkg.com is
+slow or down. Keep the folder and keep the script.
+
 FUTURE EDITS
 
 Edit the source, export a fresh deploy folder, then drag it
 onto the same Netlify site under "Deploys". It replaces the
-live version in seconds. Nothing else needs to change.
+live version in seconds.
+
+WARNING: a fresh export overwrites the HTML. Three changes
+live in the exported HTML and are lost on every export:
+
+  1. The window.__resources script in each <head>.
+  2. The local img/cs-*.webp paths on the case study page,
+     which replaced images hosted by Squarespace.
+  3. The film and loop markup on the case study page and
+     the home page.
+
+Put these three changes into the builder source. Until you
+do, check for them after every export.
