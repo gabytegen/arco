@@ -349,6 +349,15 @@ class Component extends DCLogic {
     var p=v.play();
     if(p&&p.catch)p.catch(function(){started=false;sync();});
   });
+  /* Once it is playing, clicking the picture should pause it. Native controls
+     only respond on the bar itself, so a click on the film did nothing. */
+  document.addEventListener('click',function(e){
+    var v=e.target;
+    if(!v||v.id!=='cs-reel'||!started)return;
+    var r=v.getBoundingClientRect();
+    if(e.clientY>r.bottom-60)return; /* leave the native control bar alone */
+    if(v.paused)v.play();else v.pause();
+  });
   document.addEventListener('ended',function(e){
     if(!e.target||e.target.id!=='cs-reel')return;
     started=false;e.target.currentTime=0;sync();
